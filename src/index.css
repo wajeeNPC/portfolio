@@ -1,0 +1,19 @@
+@import "tailwindcss";
+
+@import '@fontsource/mulish';
+@import '@fontsource/manrope';
+@import '@fontsource/instrument-serif';
+
+@theme {
+    --font-mulish: "Mulish", sans-serif;
+    --font-manrope: "Manrope", sans-serif;
+    --font-instrument-serif: "Instrument Serif", serif;
+    --color-primary: #dc2626;
+    --color-primary-red: #FA364B;
+    --color-text-gray: #4B5162;
+    --color-secondary-gray: #4b5563;
+    --color-dutch-white: #EED6BB;
+    --color-dark-spring-green: #166138;
+    --color-bright-yellow: #F8AD1E;
+    --color-american-red: #B11E31;
+  }
