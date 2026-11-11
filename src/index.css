@@ -1,19 +1,176 @@
 @import "tailwindcss";
 
-@import '@fontsource/mulish';
-@import '@fontsource/manrope';
-@import '@fontsource/instrument-serif';
+/* `dark:` utilities follow the data-theme attribute set by useTheme */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/*
+ * Shimmer button (Magic UI): a spark slides along the button while it spins around the edge.
+ * `inline` so the value is written into the utility itself: --speed is set on each button, and a
+ * normal theme variable would try to resolve it on :root, where it doesn't exist (no animation at all).
+ */
+@theme inline {
+  --animate-shimmer-slide: shimmer-slide var(--speed) ease-in-out infinite alternate;
+  --animate-spin-around: spin-around calc(var(--speed) * 2) infinite linear;
+}
+
+/* Rainbow button (Magic UI): the gradient slides along the border and the glow */
+:root {
+  --color-1: oklch(66.2% 0.225 25.9);
+  --color-2: oklch(60.4% 0.26 302);
+  --color-3: oklch(69.6% 0.165 251);
+  --color-4: oklch(80.2% 0.134 225);
+  --color-5: oklch(90.7% 0.231 133);
+  --rainbow: linear-gradient(90deg, var(--color-1), var(--color-5), var(--color-3), var(--color-4), var(--color-2));
+}
+
+@theme inline {
+  --animate-rainbow: rainbow var(--speed, 2s) infinite linear;
+}
+
+@keyframes rainbow {
+  0% { background-position: 0%; }
+  100% { background-position: 200%; }
+}
+
+/* Theme toggler (Magic UI): the new theme is revealed by a growing shape, so turn off the default crossfade */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+:root[data-theme-vt="active"]::view-transition-new(root) {
+  clip-path: var(--theme-vt-clip-from);
+}
+:root[data-theme-vt="active"]::view-transition-group(root) {
+  animation-duration: var(--theme-vt-duration);
+}
+
+@keyframes shimmer-slide {
+  to { transform: translate(calc(100cqw - 100%), 0); }
+}
+
+@keyframes spin-around {
+  0% { transform: translateZ(0) rotate(0); }
+  15%, 35% { transform: translateZ(0) rotate(90deg); }
+  65%, 85% { transform: translateZ(0) rotate(270deg); }
+  100% { transform: translateZ(0) rotate(360deg); }
+}
 
 @theme {
-    --font-mulish: "Mulish", sans-serif;
-    --font-manrope: "Manrope", sans-serif;
-    --font-instrument-serif: "Instrument Serif", serif;
-    --color-primary: #dc2626;
-    --color-primary-red: #FA364B;
-    --color-text-gray: #4B5162;
-    --color-secondary-gray: #4b5563;
-    --color-dutch-white: #EED6BB;
-    --color-dark-spring-green: #166138;
-    --color-bright-yellow: #F8AD1E;
-    --color-american-red: #B11E31;
+  /* Typography */
+  --font-sans: "Poppins", ui-sans-serif, system-ui, sans-serif;
+  --font-montserrat: "Montserrat", ui-sans-serif, system-ui, sans-serif;
+
+  /* Surfaces and text (flip in dark mode, see below) */
+  --color-background: #fff4ea;
+  --color-ink: #1a1a1a;
+  --color-muted: #6b6168;
+  --color-surface: rgb(255 255 255 / 0.7);
+  --color-line: rgb(26 26 26 / 0.12);
+
+  /* Fixed dark tile colour (video tile, badge) — same in both modes */
+  --color-coal: #1a1a1a;
+
+  /* Brand */
+  --color-accent: #f22fb0;
+
+  /* Flat hero colours (no gradients) */
+  --color-card: #f22fb0;      /* "About me" portrait card */
+  --color-card-disc: #e9a8ff; /* lilac disc behind the portrait */
+  --color-graphite: #5a5a5a;  /* neutral grey tile */
+
+  /* Gradient blob colors (from Figma node 13:6) */
+  --color-gradient-pink: #ff7bca;
+  --color-gradient-amber: #ffc56f;
+  --color-gradient-magenta: #f22fb0;
+  --color-gradient-orange: #f58a25;
+  --color-gradient-purple: #7061a3;
+
+  /* Motion */
+  --animate-spin-slow: spin 22s linear infinite;
+  --animate-float: float 7s ease-in-out infinite;
+  --animate-rise: rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+
+  /* Hero mesh gradient: three slow, out-of-step drifts so the blobs never sync up */
+  --animate-drift-a: drift-a 19s ease-in-out infinite alternate;
+  --animate-drift-b: drift-b 23s ease-in-out infinite alternate;
+  --animate-drift-c: drift-c 27s ease-in-out infinite alternate;
+
+  @keyframes drift-a {
+    from { transform: translate(0, 0) scale(1); }
+    to { transform: translate(18%, 14%) scale(1.15); }
   }
+
+  @keyframes drift-b {
+    from { transform: translate(0, 0) scale(1.05); }
+    to { transform: translate(-16%, 18%) scale(0.9); }
+  }
+
+  @keyframes drift-c {
+    from { transform: translate(0, 0) scale(0.95); }
+    to { transform: translate(12%, -20%) scale(1.12); }
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-14px) rotate(4deg); }
+  }
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(16px) scale(0.98); }
+    to { opacity: 1; transform: none; }
+  }
+
+}
+
+[data-theme="dark"] {
+  --color-background: #140e12;
+  --color-ink: #f6edef;
+  --color-muted: #a89ba2;
+  --color-surface: rgb(31 23 28 / 0.75);
+  --color-line: rgb(246 237 239 / 0.14);
+  color-scheme: dark;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Lenis does the smoothing when it's running; native smooth scrolling would fight it. */
+html.lenis {
+  scroll-behavior: auto;
+}
+
+body {
+  /* Decorative glows bleed past the right edge; never let them add a sideways scroll. */
+  overflow-x: clip;
+  background-color: var(--color-background);
+  font-family: var(--font-sans);
+  color: var(--color-ink);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* While the smooth cursor is on, hide the native one everywhere, including links and buttons. */
+.smooth-cursor,
+.smooth-cursor * {
+  cursor: none !important;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
