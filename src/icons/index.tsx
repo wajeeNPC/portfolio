@@ -16,6 +16,8 @@ export type IconComponent = (props: IconProps) => React.JSX.Element
 
 function make(name: keyof typeof SOLAR): IconComponent {
   const { body, width, height } = SOLAR[name]
+  // strokeWidth is pulled out only so it isn't passed to the <svg>.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const Icon = ({ size = 24, strokeWidth: _strokeWidth, ...props }: IconProps) => (
     <svg
       xmlns="http://www.w3.org/2000/svg"

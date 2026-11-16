@@ -62,7 +62,8 @@ function FileViewer({
   const [scope, animate] = useAnimate<HTMLDivElement>();
   const [size] = useState(pageSize);
   /** Content visible (fades in while the page is still settling) */
-  const [ready, setReady] = useState(false);
+  // With reduced motion the content shows straight away (no arc to wait for).
+  const [ready, setReady] = useState(() => !!reduceMotion);
   /** Fully open: shadow on, focus moved in */
   const [settled, setSettled] = useState(false);
   const [closing, setClosing] = useState(false);
@@ -79,14 +80,13 @@ function FileViewer({
     const start = overSheet(sheetRef.current, size.w, size.h);
 
     if (reduceMotion) {
-      setReady(true);
       animate(scope.current, { opacity: [0, 1] }, { duration: 0.2 }).then(() =>
         setSettled(true),
       );
       return;
     }
     const el = scope.current;
-    el.style.opacity = "1";
+    animate(el, { opacity: 1 }, { duration: 0 });
     // Size and sideways travel run the whole time; only the height arcs (up out of the folder, then down
     // to centre), so there's no pause between "lift" and "open".
     animate(
@@ -380,7 +380,8 @@ function Block({ block }: { block: DocBlock }) {
         <figure>
           <img
             src={block.src}
-            alt=""
+            alt={block.caption ?? ''}
+            loading="lazy"
             className="w-full rounded-lg border border-coal/10 bg-white object-contain"
           />
           {block.caption && (
@@ -407,6 +408,129 @@ function Block({ block }: { block: DocBlock }) {
             {block.source}
           </p>
         </div>
+      );
+    case "table":
+      return (
+        <figure>
+          {/* Scrolls sideways inside the page on narrow screens instead of squashing columns */}
+          <div className="overflow-x-auto rounded-xl border border-coal/10">
+            <table className="w-full border-collapse font-montserrat text-xs md:text-[13px]">
+              <thead>
+                <tr className="bg-coal/[0.04] text-left">
+                  {block.columns.map((col, c) => (
+                    <th
+                      key={col}
+                      scope="col"
+                      className={`px-3 py-2 font-semibold whitespace-nowrap text-coal/60 ${c > 0 && c === block.columns.length - 1 ? "text-right" : ""}`}
+                    >
+                      {col}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {block.rows.map((row, r) => (
+                  <tr
+                    key={r}
+                    className={`border-t border-coal/10 ${r === block.highlight ? "bg-accent/10 font-semibold" : ""}`}
+                  >
+                    {row.map((cell, c) => (
+                      <td
+                        key={c}
+                        className={`px-3 py-2 align-top ${c === 0 ? "text-coal" : "tabular-nums text-coal/75"} ${c > 0 && c === row.length - 1 ? "text-right whitespace-nowrap" : ""}`}
+                      >
+                        {cell}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {block.caption && (
+            <figcaption className="mt-2 font-montserrat text-xs text-coal/55">
+              {block.caption}
+            </figcaption>
+          )}
+        </figure>
+      );
+    case "bars": {
+      const max = Math.max(...block.items.map((item) => item.value));
+      return (
+        <figure>
+          <ul className="space-y-3">
+            {block.items.map((item) => (
+              <li key={item.label}>
+                <div className="flex justify-between gap-3 font-montserrat text-xs">
+                  <span className="text-coal/70">{item.label}</span>
+                  <span className="font-semibold tabular-nums">
+                    {item.display}
+                  </span>
+                </div>
+                <div className="mt-1.5 h-2.5 rounded-full bg-coal/[0.06]">
+                  <div
+                    className="h-full rounded-full bg-accent"
+                    style={{ width: `${(item.value / max) * 100}%` }}
+                  />
+                </div>
+              </li>
+            ))}
+          </ul>
+          {block.caption && (
+            <figcaption className="mt-3 font-montserrat text-xs text-coal/55">
+              {block.caption}
+            </figcaption>
+          )}
+        </figure>
+      );
+    }
+    case "shift":
+      return (
+        <div className="grid gap-3 sm:grid-cols-2">
+          {block.items.map((item) => (
+            <div key={item.label} className="rounded-xl bg-coal/[0.04] p-4">
+              <p className="font-montserrat text-xs text-coal/60">
+                {item.label}
+              </p>
+              <p className="mt-1 flex items-baseline gap-2 tabular-nums">
+                <span className="text-lg font-semibold text-coal/45">
+                  {item.from}
+                </span>
+                <span aria-label="to" className="text-coal/40">
+                  →
+                </span>
+                <span className="text-2xl font-semibold tracking-tight text-accent md:text-3xl">
+                  {item.to}
+                </span>
+              </p>
+            </div>
+          ))}
+        </div>
+      );
+    case "note":
+      return (
+        <p className="rounded-r-xl border-l-4 border-accent bg-accent/[0.07] px-4 py-3 text-sm leading-relaxed font-medium">
+          {block.text}
+        </p>
+      );
+    case "download":
+      return (
+        <a
+          href={block.href}
+          target="_blank"
+          rel="noopener"
+          className="flex items-center justify-between gap-4 rounded-xl border border-coal/15 bg-white p-4 transition-colors hover:border-accent hover:bg-accent/[0.04]"
+        >
+          <span>
+            <span className="block font-semibold">{block.label}</span>
+            {block.meta && (
+              <span className="mt-0.5 block font-montserrat text-xs text-coal/55">
+                {block.meta}
+              </span>
+            )}
+          </span>
+          <ChevronRight size={18} className="shrink-0 text-accent" />
+        </a>
       );
   }
 }

@@ -27,7 +27,7 @@ export const PROJECTS: Project[] = [
     slug: 'msme-rag',
     kind: 'Case study',
     title: 'MSME Loan RAG',
-    tagline: 'Citation-backed answers on Sri Lankan SME loan schemes, measured on a 33-question eval.',
+    tagline: 'Citation-backed answers on Sri Lankan SME loan schemes. 11 setups tested to find what actually improves a RAG system.',
     stack: ['RAG', 'Chroma', 'OpenAI', 'Evals'],
     tone: 'bg-gradient-pink text-coal',
     icon: FileSearch,

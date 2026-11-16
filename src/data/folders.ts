@@ -37,9 +37,9 @@ export const FOLDERS: Record<string, FolderLook> = {
     tone: 'light',
     files: [
       { name: 'Overview', meta: 'Case study', image: msmeCover },
-      { name: 'Eval set', meta: '33 questions' },
-      { name: 'Citations', meta: 'Doc + page' },
-      { name: 'Stack', meta: 'LangChain · Chroma' },
+      { name: 'How it works', meta: 'Pipeline' },
+      { name: 'Findings', meta: '11 setups' },
+      { name: 'How I measured', meta: '33 questions' },
     ],
   },
   paarra: {

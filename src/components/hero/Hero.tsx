@@ -20,7 +20,7 @@ import github from '../../assets/icons/github.svg'
 import gmail from '../../assets/icons/gmail.svg'
 import whatsapp from '../../assets/icons/whatsapp.svg'
 
-const ROLE = 'Software Engineer & AI Developer'
+const ROLE = SITE.title
 const INTRO =
   'From the first line of code to the last pixel, I build full-stack platforms and intelligent systems that solve real problems, not just demos.'
 

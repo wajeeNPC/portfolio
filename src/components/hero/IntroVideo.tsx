@@ -67,7 +67,7 @@ function IntroVideo() {
         </span>
         <span className="flex flex-col items-start leading-tight">
           Watch intro
-          <span className="text-xs font-medium text-muted">{videoSrc ? '1 min' : 'Coming soon'}</span>
+          <span className="text-xs font-medium text-muted">{videoSrc ? '2 min' : 'Coming soon'}</span>
         </span>
       </button>
 

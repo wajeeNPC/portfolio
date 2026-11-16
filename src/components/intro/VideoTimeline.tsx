@@ -76,7 +76,9 @@ function VideoTimeline({ videoRef }: { videoRef: RefObject<HTMLVideoElement | nu
       </span>
       <div className="group/track relative flex h-6 flex-1 items-center">
         <div className="relative h-1 w-full overflow-hidden rounded-full bg-white/30 transition-[height] duration-200 group-hover/track:h-1.5">
-          <div ref={fillRef} className="absolute inset-0 origin-left scale-x-0 rounded-full bg-accent" />
+          {/* Starts empty via inline transform; JS updates it. (Tailwind's scale-x-0 sets the separate `scale`
+              property, which would multiply with this transform and keep the fill at zero forever.) */}
+          <div ref={fillRef} style={{ transform: 'scaleX(0)' }} className="absolute inset-0 origin-left rounded-full bg-accent" />
         </div>
         <input
           type="range"

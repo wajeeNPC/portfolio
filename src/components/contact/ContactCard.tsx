@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import { motion, useReducedMotion } from 'motion/react'
-import { Mail, MessageSquare, Send, User, type IconComponent } from '../../icons'
+import { Check, Mail, MessageSquare, Send, User, type IconComponent } from '../../icons'
 import { SITE } from '../../data/site'
 import { RainbowButton } from '../ui/rainbow-button'
 import linkedin from '../../assets/icons/linkedin.svg'
@@ -21,21 +21,58 @@ const STRIPS = 11
 const FIELD =
   'w-full rounded-xl border border-line bg-background px-3.5 py-2.5 font-montserrat text-sm text-ink outline-none transition-colors placeholder:text-muted/60 focus:border-accent focus:ring-2 focus:ring-accent/20'
 
+// Web3Forms access key (free, from web3forms.com), set in portfolio/.env.local as VITE_WEB3FORMS_KEY.
+// Without it, Send falls back to opening the visitor's email app.
+const FORM_KEY = import.meta.env.VITE_WEB3FORMS_KEY as string | undefined
+
+type Status = 'idle' | 'sending' | 'sent' | 'error'
+
 /**
  * Contact card: a coal panel with a pink glow seen through ribbed glass on the left,
- * and a light form on the right. Sending opens the visitor's email app with the message filled in.
+ * and a light form on the right. Sending delivers the message straight to my inbox via Web3Forms.
  */
 function ContactCard() {
   const reduceMotion = useReducedMotion()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [message, setMessage] = useState('')
+  const [status, setStatus] = useState<Status>('idle')
 
-  const onSubmit = (event: FormEvent) => {
-    event.preventDefault()
+  const openEmailApp = () => {
     const subject = `Hello from ${name || 'your portfolio'}`
     const body = `${message}\n\n— ${name}${email ? ` (${email})` : ''}`
     window.location.href = `mailto:${SITE.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
+  }
+
+  const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (!FORM_KEY) return openEmailApp()
+    // Hidden field only bots fill in
+    if (new FormData(event.currentTarget).get('botcheck')) return
+
+    setStatus('sending')
+    try {
+      const res = await fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({
+          access_key: FORM_KEY,
+          subject: `Portfolio message from ${name}`,
+          from_name: 'Portfolio contact form',
+          name,
+          email,
+          message,
+        }),
+      })
+      const data = (await res.json()) as { success?: boolean }
+      if (!res.ok || !data.success) throw new Error('Send failed')
+      setStatus('sent')
+      setName('')
+      setEmail('')
+      setMessage('')
+    } catch {
+      setStatus('error')
+    }
   }
 
   return (
@@ -77,7 +114,8 @@ function ContactCard() {
         </h2>
         <p className="mt-2 font-montserrat text-[15px] text-muted">Open to AI projects that stretch what I know. Say hi.</p>
 
-        <form onSubmit={onSubmit} className="mt-8 space-y-4">
+        <form onSubmit={onSubmit} onChange={() => status !== 'sending' && setStatus('idle')} className="mt-8 space-y-4">
+          <input type="checkbox" name="botcheck" tabIndex={-1} autoComplete="off" aria-hidden="true" className="hidden" />
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block">
               <FieldLabel icon={User}>Your name</FieldLabel>
@@ -118,10 +156,28 @@ function ContactCard() {
             />
           </label>
 
-          <RainbowButton type="submit" className="min-h-11 w-full active:scale-[0.99]">
-            Send message
+          <RainbowButton type="submit" disabled={status === 'sending'} className="min-h-11 w-full active:scale-[0.99]">
+            {status === 'sending' ? 'Sending…' : 'Send message'}
             <Send aria-hidden="true" className="size-4" />
           </RainbowButton>
+
+          <p role="status" aria-live="polite" className="min-h-5 text-center font-montserrat text-[13px]">
+            {status === 'sent' && (
+              <span className="inline-flex items-center gap-1.5 font-medium text-ink">
+                <Check aria-hidden="true" className="size-4 text-accent" />
+                Thanks, your message is in my inbox. I'll get back to you soon.
+              </span>
+            )}
+            {status === 'error' && (
+              <span className="text-muted">
+                That didn't go through. Please try again, or{' '}
+                <a href={`mailto:${SITE.email}`} className="font-medium text-accent underline underline-offset-2">
+                  email me directly
+                </a>
+                .
+              </span>
+            )}
+          </p>
         </form>
 
         {/* Other ways to reach me */}
